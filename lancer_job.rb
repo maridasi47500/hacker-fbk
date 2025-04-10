@@ -4,8 +4,6 @@ require 'i18n'
 require 'json'
 require 'date'
 require 'logger'
-require 'test/unit'
-require 'watir-jquery'
 def okurl(ok)
     return Addressable::URI.escape(ok)
 end
