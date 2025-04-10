@@ -1,0 +1,5 @@
+*.json
+*.python
+*.py
+*.sh
+logs/
