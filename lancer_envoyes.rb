@@ -48,6 +48,7 @@ links.to_a.each do |link|
                     x=x.split("_")
                     logger.info("\nwow !!! \n#{z}ieme contact  \n ")
                     numero=x[1]
+                    myname=x[0]
                     next if @d["ids"].any? {|h| h == numero }
                     monlien="https://www.facebook.com/messages/t/#{numero}"
                     logger.info("\n#{monlien}  \n ")
@@ -79,6 +80,7 @@ links.to_a.each do |link|
                                 logger.info("\nnot finish yet : il y a encore #{nbmsg} msg non supprime sur la page")
                                 div1="bonjour#{i}"
 
+                                browser.execute_script("document.querySelector(\"[aria-label*='Messages dans la conversation avec']\").children[0].children[0].scrollTop=0")
                                 browser.execute_script("document.querySelector(\"[role=presentation] > span[dir=auto]\").parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.id='#{div1}'")
                                 logger.info("\nvu element 1")
                                 browser.element(id: div1).fire_event(:mouseover)
@@ -88,8 +90,18 @@ links.to_a.each do |link|
                                 browser.wait_until do |b|
                                     b.text.include?("Retirer")
                                 end
+                                begin
 
-                                browser.execute_script("document.querySelector(\"[aria-label='Supprimer le message']\").click()")
+                                    browser.execute_script("document.querySelector(\"[aria-label='Supprimer le message']\").click()")
+                                rescue => e
+                                    logger.info("\n erreur supprimer ou retirer message 1")
+                                end
+                                begin
+
+                                    browser.execute_script("document.querySelector(\"[aria-label='Retirer le message']\").click()")
+                                rescue => e
+                                    logger.info("\n erreur supprimer ou retirer message 2")
+                                end
                                 logger.info("\n retirer")
 
                                 browser.wait_until do |b|
@@ -103,9 +115,11 @@ links.to_a.each do |link|
                             end
                         rescue => e
                             logger.error("\n "+e.message.to_s)
-                            @d["ids"] << numero if !@d["ids"].any? {|h| h == numero }
-                            File.open('out.json', 'w') do |f|
-                              f.write(@d.to_json)
+                            if e.message.to_s.include?("after 10 seconds")
+                               @d["ids"] << numero if !@d["ids"].any? {|h| h == numero }
+                               File.open('out.json', 'w') do |f|
+                                 f.write(@d.to_json)
+                               end
                             end
                         end
                     end
