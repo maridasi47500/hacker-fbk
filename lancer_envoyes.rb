@@ -43,7 +43,7 @@ links.to_a.each do |link|
                     msg=JSON.parse(Dir.glob(w+"/*")[0])
                     
                     browser.wait_until do |b|
-                        b.text.include?(msg["participants"][1]["name"]) and b.text.include?(msg["participants"][0]["name"]) and b.text.include?(msg["messages"][0]["content"])
+                        b.text.include?(msg["participants"][1]["name"]) and b.text.include?(msg["participants"][0]["name"]) and b.text.include?(msg["messages"][0]["content"].encode("utf-8"))
                     end
                     msg["messages"].each_with_index do |k,i|
                         div1="bonjour#{i}"
