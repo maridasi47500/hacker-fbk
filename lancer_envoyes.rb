@@ -34,28 +34,36 @@ links.to_a.each do |link|
               logger.info("\nhey !!! \nje suis sur un compte anonyme \n ")
 
               begin
-                monlien="https://www.facebook.com/messages/t/386155821439928"
-                browser.goto(monlien)
-                browser.wait_until do |b|
-                    b.text.include?("titre personne") and b.text.include?("premier message")
-                end
-                div1="bonjour1"
+                Dir.glob("./inbox/*")[1..].each do |w|
+                    x=w.gsub("./inbox/","").split["_"]
+                    numero=x[1]
+                    monlien="https://www.facebook.com/messages/t/#{numero}"
 
-                browser.execute_script("document.querySelector(\"[role=presentation] > span[dir=auto]\").parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.id='#{div1}'")
-                browser.element(id: div1).fire_event(:mouseover)
-                browser.execute_script("document.querySelector(\"[aria-label='Plus']\").click()")
-                browser.wait_until do |b|
-                    b.text.include?("Retirer")
+                    browser.goto(monlien)
+                    msg=JSON.parse(Dir.glob(w+"/*")[0])
+                    
+                    browser.wait_until do |b|
+                        b.text.include?(msg["participants"][1]["name"]) and b.text.include?(msg["participants"][0]["name"]) and b.text.include?(msg["messages"][0]["content"])
+                    end
+                    msg["messages"].each_with_index do |k,i|
+                        div1="bonjour#{i}"
+
+                        browser.execute_script("document.querySelector(\"[role=presentation] > span[dir=auto]\").parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.id='#{div1}'")
+                        browser.element(id: div1).fire_event(:mouseover)
+                        browser.execute_script("document.querySelector(\"[aria-label='Plus']\").click()")
+                        browser.wait_until do |b|
+                            b.text.include?("Retirer")
+                        end
+                        browser.execute_script("document.querySelector(\"[aria-label='Supprimer le message']\").click()")
+                        browser.wait_until do |b|
+                            b.text.include?("Pour qui voulez-vous retirer ce message ?") or b.text.include?("Supprimer pour vous") or b.text.include?("Supprimer pour tout le monde")
+                        end
+                        browser.execute_script("document.querySelector(\"[aria-label='Retirer']\").outerHTML=''")
+                        browser.execute_script("document.querySelector(\"[aria-label='Retirer']\").click()")
+                        n=false
+                        browser.execute_script("alert('finish le message est supprime')")
+                    end
                 end
-                browser.execute_script("document.querySelector(\"[aria-label='Supprimer le message']\").click()")
-                browser.wait_until do |b|
-                    b.text.include?("Pour qui voulez-vous retirer ce message ?")
-                end
-                browser.execute_script("document.querySelector(\"[aria-label='Retirer']\").outerHTML=''")
-                browser.execute_script("document.querySelector(\"[aria-label='Retirer']\").click()")
-                n=false
-                browser.execute_script("alert('finish le message est supprime')")
-                #browser.execute_script("alert('finish les likes sont supprimes')")
                    
 
               rescue => e
