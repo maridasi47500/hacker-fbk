@@ -4,6 +4,7 @@ require 'i18n'
 require 'json'
 require 'date'
 require 'logger'
+require "rails"
 def okurl(ok)
     return Addressable::URI.escape(ok)
 end
@@ -34,41 +35,65 @@ links.to_a.each do |link|
               logger.info("\nhey !!! \nje suis sur un compte anonyme \n ")
 
               begin
-                Dir.glob("./inbox/*")[1..].each do |w|
-                    x=w.gsub("./inbox/","").split["_"]
+                Dir.glob("./inbox/*")[1..].each_with_index do |w,z|
+                    logger.info("\nhello  \ncomment vas tu ?  \n ")
+                    logger.info("\ncest une string?  \n ")
+                    logger.info("\n#{w.is_a?(String)}  \n ")
+                    x=w.gsub("./inbox/","")
+                    logger.info("\ncest une string?  \n ")
+                    logger.info("\n#{x.is_a?(String)}  \n ")
+                    x=x.split("_")
+                    logger.info("\nwow !!! \n#{z}ieme contact  \n ")
                     numero=x[1]
                     monlien="https://www.facebook.com/messages/t/#{numero}"
+                    logger.info("\n#{monlien}  \n ")
 
                     browser.goto(monlien)
-                    msg=JSON.parse(Dir.glob(w+"/*")[0])
-                    
-                    browser.wait_until do |b|
-                        b.text.include?(msg["participants"][1]["name"]) and b.text.include?(msg["participants"][0]["name"]) and b.text.include?(msg["messages"][0]["content"].encode("utf-8"))
-                    end
-                    msg["messages"].each_with_index do |k,i|
-                        div1="bonjour#{i}"
+                    logger.info("\n#{Dir.glob(w+"/*").length} groupes de messages pour supprimer \n ")
+                    logger.info("\nje suis bien  arrivee a #{browser.url}  \n ")
+                    Dir.glob(w+"/*").each do |yeah|
+                        begin
+                            logger.info("\n====================my list of messages is a string====================")
+                            logger.info("\n #{yeah.is_a?(String)}")
 
-                        browser.execute_script("document.querySelector(\"[role=presentation] > span[dir=auto]\").parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.id='#{div1}'")
-                        browser.element(id: div1).fire_event(:mouseover)
-                        browser.execute_script("document.querySelector(\"[aria-label='Plus']\").click()")
-                        browser.wait_until do |b|
-                            b.text.include?("Retirer")
+                            msg=JSON.parse(File.read(yeah))
+                            logger.info("\n====================participants de cette idscusion====================")
+                            logger.info("\n"+msg["participants"].map {|p|p["name"][0..2]+"$$$$ANONYME"}.to_sentence)
+                            
+                            browser.wait_until do |b|
+                                b.text.include?(msg["participants"][1]["name"]) and b.text.include?(msg["participants"][0]["name"]) and msg["messages"].any? {|mymsg|b.text.include?(mymsg["content"].encode("utf-8")) }
+                            end
+                            while msg["messages"].any? {|mymsg|browser.text.include?(mymsg["content"].encode("utf-8")) }
+                                nbmsg= msg["messages"].count {|mymsg|browser.text.include?(mymsg["content"].encode("utf-8")) }
+                                logger.info("\nnot finish yet : il y a encore #{nbmsg} msg non supprime sur la page")
+                                div1="bonjour#{i}"
+
+                                browser.execute_script("document.querySelector(\"[role=presentation] > span[dir=auto]\").parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.id='#{div1}'")
+                                browser.element(id: div1).fire_event(:mouseover)
+                                browser.execute_script("document.querySelector(\"[aria-label='Plus']\").click()")
+                                browser.wait_until do |b|
+                                    b.text.include?("Retirer")
+                                end
+                                browser.execute_script("document.querySelector(\"[aria-label='Supprimer le message']\").click()")
+                                browser.wait_until do |b|
+                                    b.text.include?("Pour qui voulez-vous retirer ce message ?") or b.text.include?("Supprimer pour vous") or b.text.include?("Supprimer pour tout le monde")
+                                end
+                                browser.execute_script("document.querySelector(\"[aria-label='Retirer']\").outerHTML=''")
+                                browser.execute_script("document.querySelector(\"[aria-label='Retirer']\").click()")
+                                logger.info("\nmessage "+i.to_s)
+
+                            end
+                        rescue => e
+                            logger.error("\n "+e.message.to_s)
                         end
-                        browser.execute_script("document.querySelector(\"[aria-label='Supprimer le message']\").click()")
-                        browser.wait_until do |b|
-                            b.text.include?("Pour qui voulez-vous retirer ce message ?") or b.text.include?("Supprimer pour vous") or b.text.include?("Supprimer pour tout le monde")
-                        end
-                        browser.execute_script("document.querySelector(\"[aria-label='Retirer']\").outerHTML=''")
-                        browser.execute_script("document.querySelector(\"[aria-label='Retirer']\").click()")
-                        n=false
-                        browser.execute_script("alert('finish le message est supprime')")
                     end
                 end
+                browser.execute_script("alert('finish les messages sont supprime')")
                    
 
               rescue => e
-                logger.info("\ngroup_id\nerreur \n "+e.message)
-                logger.error("\nil y a eu un probleme pour le group facebook  avec le message: "+e.message)
+                logger.info("\ngroup_id\nerreur \n "+e.message.to_s)
+                logger.error("\nil y a eu un probleme pour le group facebook  avec le message: "+e.message.to_s)
                 next
     
               end

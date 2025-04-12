@@ -1,0 +1,1 @@
+(cd logs && cat "$(ls -rt | tail -n1)")
