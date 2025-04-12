@@ -5,6 +5,9 @@ require 'json'
 require 'date'
 require 'logger'
 require "rails"
+@d=JSON.parse(File.read("out.json"))
+
+
 def okurl(ok)
     return Addressable::URI.escape(ok)
 end
@@ -45,6 +48,7 @@ links.to_a.each do |link|
                     x=x.split("_")
                     logger.info("\nwow !!! \n#{z}ieme contact  \n ")
                     numero=x[1]
+                    next if @d["ids"].any? {|h| h == numero }
                     monlien="https://www.facebook.com/messages/t/#{numero}"
                     logger.info("\n#{monlien}  \n ")
 
@@ -60,31 +64,49 @@ links.to_a.each do |link|
                             logger.info("\n====================participants de cette idscusion====================")
                             logger.info("\n"+msg["participants"].map {|p|p["name"][0..2]+"$$$$ANONYME"}.to_sentence)
                             
-                            browser.wait_until do |b|
-                                b.text.include?(msg["participants"][1]["name"]) and b.text.include?(msg["participants"][0]["name"]) and msg["messages"].any? {|mymsg|b.text.include?(mymsg["content"].encode("utf-8")) }
+                            browser.wait_until(timeout: 10) do |b|
+                                #b.text.include?(msg["participants"][1]["name"]) and b.text.include?(msg["participants"][0]["name"]) and msg["messages"].any? {|mymsg|b.text.include?(mymsg["content"]) }
+                                #logger.info "\text:\n"+b.text
+                                #logger.info "\nparticipant1:\n"+b.text.include?(msg["participants"][1]["name"]).to_s 
+                                #logger.info "\nparticipant 2:\n"+b.text.include?(msg["participants"][0]["name"]) .to_s
+                                #logger.info "\nmessages :\n"+msg["messages"].any? {|mymsg|b.text.include?(mymsg["content"]) }.to_s
+                                b.text.include?(msg["participants"][0]["name"]) and msg["messages"].any? {|mymsg|b.text.include?(mymsg["content"]) }
                             end
-                            while msg["messages"].any? {|mymsg|browser.text.include?(mymsg["content"].encode("utf-8")) }
+                            i = 0
+                            while msg["messages"].any? {|mymsg|browser.text.include?(mymsg["content"].encode("utf-8")) } do
+                                i+=1
                                 nbmsg= msg["messages"].count {|mymsg|browser.text.include?(mymsg["content"].encode("utf-8")) }
                                 logger.info("\nnot finish yet : il y a encore #{nbmsg} msg non supprime sur la page")
                                 div1="bonjour#{i}"
 
                                 browser.execute_script("document.querySelector(\"[role=presentation] > span[dir=auto]\").parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.id='#{div1}'")
+                                logger.info("\nvu element 1")
                                 browser.element(id: div1).fire_event(:mouseover)
+                                logger.info("\nhover element 1")
                                 browser.execute_script("document.querySelector(\"[aria-label='Plus']\").click()")
+                                logger.info("\n element 1 plus doption")
                                 browser.wait_until do |b|
                                     b.text.include?("Retirer")
                                 end
+
                                 browser.execute_script("document.querySelector(\"[aria-label='Supprimer le message']\").click()")
+                                logger.info("\n retirer")
+
                                 browser.wait_until do |b|
                                     b.text.include?("Pour qui voulez-vous retirer ce message ?") or b.text.include?("Supprimer pour vous") or b.text.include?("Supprimer pour tout le monde")
                                 end
                                 browser.execute_script("document.querySelector(\"[aria-label='Retirer']\").outerHTML=''")
                                 browser.execute_script("document.querySelector(\"[aria-label='Retirer']\").click()")
+                                logger.info("\n retirer valider")
                                 logger.info("\nmessage "+i.to_s)
 
                             end
                         rescue => e
                             logger.error("\n "+e.message.to_s)
+                            @d["ids"] << numero if !@d["ids"].any? {|h| h == numero }
+                            File.open('out.json', 'w') do |f|
+                              f.write(@d.to_json)
+                            end
                         end
                     end
                 end

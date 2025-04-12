@@ -15,6 +15,13 @@ ruby lancer_group.rb
 rvm use 3.3.3
 gem install watir addressable i18n logger
 
+#cree out.json "{
+#  "ids": []
+#}
+#"
+#fait
+sh dernierlog
 ````
 - connecte toi et ruby fait tout pour toi 
 # hacker-fbk
+
