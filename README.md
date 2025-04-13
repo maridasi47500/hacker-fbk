@@ -21,6 +21,7 @@ gem install watir addressable i18n logger
 #"
 #fait
 sh dernierlog
+export YOURID="YOUR_FACEBOOK_USERID" #tu dois faire pour faire fonctionner les scripts, trouve ton id avec l'api
 ````
 - connecte toi et ruby fait tout pour toi 
 # hacker-fbk
