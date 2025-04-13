@@ -34,40 +34,31 @@ links.to_a.each do |link|
               logger.info("\nhey !!! \nje suis sur un compte anonyme \n ")
 
               begin
-                mykey="YOURACTIVITYPOSTSNONMANAGESCHEMA"
-                #mykey="MANAGEPOSTSPHOTOSANDVIDEOS"
-                monlien="https://www.facebook.com/#{ENV["YOURID"]}/allactivity?activity_history=false&category_key=#{mykey}&manage_mode=false&should_load_landing_page=false"
+                catkey="REMOVEDFRIENDS"
+                monlien="https://www.facebook.com/#{ENV["YOURID"]}/allactivity?activity_history=false&category_key=#{catkey}&manage_mode=false&should_load_landing_page=false"
                 browser.goto(monlien)
                 browser.wait_until do |b|
-                    b.text.include?("Publications") or b.text.include?("Historique d’activité")
+                    b.text.include?("Ami(e)s supprimé(e)s")
                 end
                 a=1
-                while browser.text.include?("a mis à jour") or browser.text.include?("a écrit") do
-                    while browser.text.include?("a mis à jour") or browser.text.include?("a écrit") do
+                while browser.text.include?("a supprimé") do
+                    while browser.text.include?("a supprimé") do
                         browser.execute_script("document.querySelector(\"[aria-label='Options d’action']\").click()")
                         browser.wait_until do |b|
-                            b.text.include?("Déplacer dans la corbeille") or b.text.include?("Ajouter au profil") or b.text.include?("Supprimer")
+                            b.text.include?("Supprimer")
                         end
-                        if browser.text.include?("Ajouter au profil")
-                            browser.execute_script("document.querySelector(\"[role=menuitem]:nth-child(1)\").click()")
-                        elsif browser.text.include?("Supprimer")
+                        if browser.text.include?("Supprimer")
                             browser.execute_script("document.querySelector(\"[role=menuitem]:nth-last-child(1)\").click()")
                             browser.wait_until do |b|
                                 b.text.include?("Il est impossible de restaurer les éléments que vous supprimez.")
                             end
                             browser.execute_script("document.querySelector(\"[aria-label='Supprimer'][role=button]\").click()")
-                        else
-                            browser.execute_script("document.querySelector(\"[role=menuitem]:nth-last-child(1)\").click()")
-                            browser.wait_until do |b|
-                                b.text.include?("Les éléments déplacés dans la corbeille seront supprimés après 30 jours.")
-                            end
-                            browser.execute_script("document.querySelector(\"[aria-label='Déplacer dans la corbeille'][role=button]\").click()")
                         end
 
                     end
                     browser.goto(monlien)
                 end
-                browser.execute_script("alert('finish les likes sont supprimes')")
+                browser.execute_script("alert('finish les amis supprimés sont supprimes')")
                    
 
               rescue => e
